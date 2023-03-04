@@ -89,7 +89,7 @@ def main():
     callbacks = [early_stopping_callback, model_checkpoint_callback]
 
     args.weights_summary = "full"  # Print full summary of the model
-    trainer = pl.Trainer(callbacks=callbacks, logger=logger,enable_checkpointing=True, default_root_dir="training/logs")
+    trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=callbacks, logger=logger,enable_checkpointing=True, default_root_dir="training/logs")
 
     # pylint: disable=no-member
     trainer.tune(lit_model, datamodule=data)  # If passing --auto_lr_find, this will set learning rate

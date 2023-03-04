@@ -1,5 +1,6 @@
 import argparse
 import pytorch_lightning as pl
+from torchmetrics.functional import accuracy
 import torch
 
 
@@ -9,20 +10,20 @@ LOSS = "cross_entropy"
 ONE_CYCLE_TOTAL_STEPS = 100
 
 
-class Accuracy(pl.metrics.Accuracy):
-    """Accuracy Metric with a hack."""
+# class accuracy(pl.metrics.accuracy):
+#     """accuracy Metric with a hack."""
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
-        """
-        Metrics in Pytorch-lightning 1.2+ versions expect preds to be between 0 and 1 else fails with the ValueError:
-        "The `preds` should be probabilities, but values were detected outside of [0,1] range."
-        This is being tracked as a bug in https://github.com/PyTorchLightning/metrics/issues/60.
-        This method just hacks around it by normalizing preds before passing it in.
-        Normalized preds are not necessary for accuracy computation as we just care about argmax().
-        """
-        if preds.min() < 0 or preds.max() > 1:
-            preds = torch.nn.functional.softmax(preds, dim=-1)
-        super().update(preds=preds, target=target)
+#     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:
+#         """
+#         Metrics in Pytorch-lightning 1.2+ versions expect preds to be between 0 and 1 else fails with the ValueError:
+#         "The `preds` should be probabilities, but values were detected outside of [0,1] range."
+#         This is being tracked as a bug in https://github.com/PyTorchLightning/metrics/issues/60.
+#         This method just hacks around it by normalizing preds before passing it in.
+#         Normalized preds are not necessary for accuracy computation as we just care about argmax().
+#         """
+#         if preds.min() < 0 or preds.max() > 1:
+#             preds = torch.nn.functional.softmax(preds, dim=-1)
+#         super().update(preds=preds, target=target)
 
 
 class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
@@ -47,9 +48,9 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         self.one_cycle_max_lr = self.args.get("one_cycle_max_lr", None)
         self.one_cycle_total_steps = self.args.get("one_cycle_total_steps", ONE_CYCLE_TOTAL_STEPS)
 
-        self.train_acc = Accuracy()
-        self.val_acc = Accuracy()
-        self.test_acc = Accuracy()
+        self.train_acc = None
+        self.val_acc = None
+        self.test_acc = None
 
     @staticmethod
     def add_to_argparse(parser):
@@ -77,7 +78,7 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("train_loss", loss)
-        self.train_acc(logits, y)
+        self.train_acc=accuracy(logits, y,'multiclass',num_classes=10)
         self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
         return loss
 
@@ -86,11 +87,11 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("val_loss", loss, prog_bar=True)
-        self.val_acc(logits, y)
+        self.val_acc=accuracy(logits, y,'multiclass',num_classes=10)
         self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        self.test_acc(logits, y)
+        self.test_acc=accuracy(logits, y,'multiclass',num_classes=10)
         self.log("test_acc", self.test_acc, on_step=False, on_epoch=True)

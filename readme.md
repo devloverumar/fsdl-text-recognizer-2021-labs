@@ -1,5 +1,7 @@
 # Full Stack Deep Learning Spring 2021 Labs
 
+### This Branch is forked from full-stack-deep-learning/fsdl-text-recognizer-2021-labs and contains fixes of dependencies as of March 2023.
+
 Welcome!
 
 As part of Full Stack Deep Learning 2021, we will incrementally develop a complete deep learning codebase to understand the content of handwritten paragraphs.

@@ -62,7 +62,9 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("train_loss", loss)
-        self.train_acc=accuracy(logits, y,'multiclass',num_classes=10)
+        print(y.shape[0])
+        print(logits.shape[0],logits.shape[1])
+        self.train_acc=accuracy(logits, y,'multiclass',num_classes=logits.shape[1])
         self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
         return loss
 
@@ -71,11 +73,11 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("val_loss", loss, prog_bar=True)
-        self.val_acc=accuracy(logits, y,'multiclass',num_classes=10)
+        self.val_acc=accuracy(logits, y,'multiclass',num_classes=logits.shape[1])
         self.log("val_acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch, batch_idx):  # pylint: disable=unused-argument
         x, y = batch
         logits = self(x)
-        self.test_acc=accuracy(logits, y,'multiclass',num_classes=10)
+        self.test_acc=accuracy(logits, y,'multiclass',num_classes=logits.shape[1])
         self.log("test_acc", self.test_acc, on_step=False, on_epoch=True)

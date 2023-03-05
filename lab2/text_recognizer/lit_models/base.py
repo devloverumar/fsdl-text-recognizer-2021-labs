@@ -62,8 +62,6 @@ class BaseLitModel(pl.LightningModule):  # pylint: disable=too-many-ancestors
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("train_loss", loss)
-        print(y.shape[0])
-        print(logits.shape[0],logits.shape[1])
         self.train_acc=accuracy(logits, y,'multiclass',num_classes=logits.shape[1])
         self.log("train_acc", self.train_acc, on_step=False, on_epoch=True)
         return loss
